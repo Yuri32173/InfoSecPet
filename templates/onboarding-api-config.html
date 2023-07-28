@@ -1,0 +1,94 @@
+{% extends "onboarding-template.html" %}
+{% block title %}Onboarding — API Configuration{% endblock %}
+{% block onboarding_content %}
+<h4 class="mt-4">Generate API Key</h4>
+<p>To be able to access the SecureDB API, an API key will be required. Click on
+  the button below to generate one.</p>
+<button type="button" class="btn btn-primary"
+  id="open-api-key-generation-prompt-btn" data-toggle="modal"
+  data-target="#generate-new-api-key-prompt">Generate new API Key</button>
+<hr class="my-4" />
+<div class="d-flex">
+  <a class="btn btn-primary float-right ml-auto"
+    href="/onboarding/drive-upload-config" role="button">Continue →</a>
+</div>
+
+<!-- Prompt for API key generation -->
+<div class="modal fade" id="generate-new-api-key-prompt" tabindex="-1">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Generate a new API key</h5>
+        <button type="button" class="close"
+          data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Input a name to be associated with the API key.</p>
+        <form id="generate-new-api-key-form">
+          <div class="form-group">
+            <label for="api-key-name-input">API key name</label>
+            <input type="text" class="form-control" id="api-key-name-input"
+              name="api-key-name" required="" placeholder="API key name" />
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary"
+          data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary"
+          onclick="document.getElementById('generate-new-api-key-form').requestSubmit();">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- API key generation success modal -->
+<div class="modal fade" id="api-key-generation-success-modal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">API key generated</h5>
+        <button type="button" class="close"
+          data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>The API key named <code id="generated-api-key-name"></code> was
+          successfully generated. <b>Please copy the API key now as it will not
+          be shown again</b>.</p>
+        <pre class="p-2 border rounded d-block w-100 text-center"
+          style="font-size: 1.2rem;"><code id="new-api-key"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary"
+          data-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- API key generation failure modal -->
+<div class="modal fade" id="api-key-generation-failure-modal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Error while generating API key</h5>
+        <button type="button" class="close"
+          data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>There was an error while generating the API key. Please try again
+          later.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary"
+          data-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let csrfToken = "{{ csrf_token() }}";
+</script>
+<script src="/static/js/onboardingApiConfig.js"></script>
+{% endblock%}
