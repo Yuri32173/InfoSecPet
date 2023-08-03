@@ -80,16 +80,27 @@ class BackupFirstForm(FlaskForm):
     submit = SubmitField("Backup & Save Settings")
 
 
+from flask_wtf import FlaskForm
+from wtforms import (
+    StringField,
+    PasswordField,
+    SelectField,
+    SelectMultipleField,
+    RadioField,
+    DateField,
+    IntegerField,
+    FloatField,
+    validators,
+)
+
 class BackupForm(FlaskForm):
     source = StringField(
-        "Database Source",
-        [Length(max=260), Optional()],
-        render_kw={"placeholder": "Leave empty if no changes"},
+        "Database Source", [validators.Length(max=260), validators.Optional()],
+        render_kw={"placeholder": "Leave empty if no changes"}
     )
     interval = FloatField(
-        "Interval",
-        [Optional()],
-        render_kw={"placeholder": "Leave empty if no changes"},
+        "Interval", [validators.Optional()],
+        render_kw={"placeholder": "Leave empty if no changes"}
     )
     interval_type = RadioField(
         "Interval Type",
@@ -100,24 +111,21 @@ class BackupForm(FlaskForm):
             ("wk", "Week"),
             ("mth", "Month"),
         ],
-        default="wk",
+        default="wk"
     )
     manual = SubmitField("Manual Backup")
     update = SubmitField("Backup & Update Settings")
 
-
-# Leave the comma after Optional, else it will not work
 class RequestFilter(FlaskForm):
-    query = StringField("Search", [Length(min=1, max=100), Optional()])
+    query = StringField("Search", [validators.Length(min=1, max=100), validators.Optional()])
     alert_level = SelectField(
-        "Alert Level",
-        [InputRequired()],
+        "Alert Level", [validators.InputRequired()],
         choices=[
             ("None", "None"),
             ("High", "High"),
             ("Medium", "Medium"),
             ("Low", "Low"),
-        ],
+        ]
     )
     date = DateField(
         "Date", format="%Y-%m-%d", validators=(validators.Optional(),)
@@ -126,78 +134,68 @@ class RequestFilter(FlaskForm):
         "Sort By", choices=[("Latest", "Latest"), ("Oldest", "Oldest")]
     )
 
-
 class RequestBehaviourForm(FlaskForm):
-    url = StringField("URL", [InputRequired(), Length(min=1, max=100)])
-    count = IntegerField("URL Accessed Count", [InputRequired()])
+    url = StringField("URL", [validators.InputRequired(), validators.Length(min=1, max=100)])
+    count = IntegerField("URL Accessed Count", [validators.InputRequired()])
     alert_level = SelectField(
-        "Alert Level",
-        [InputRequired()],
+        "Alert Level", [validators.InputRequired()],
         choices=[("High", "High"), ("Medium", "Medium"), ("Low", "Low")],
     )
-    refresh_time = IntegerField("URL Count refresh time", [InputRequired()])
+    refresh_time = IntegerField("URL Count refresh time", [validators.InputRequired()])
     refresh_unit = SelectField(
-        "Unit Interval",
-        [InputRequired()],
+        "Unit Interval", [validators.InputRequired()],
         choices=[
             ("Sec", "Sec"),
             ("Min", "Min"),
             ("Hour", "Hour"),
             ("Day", "Day"),
-        ],
+        ]
     )
-
 
 class SensitiveFieldForm(FlaskForm):
     sensitive_field = StringField(
-        "Sensitive Field", [InputRequired(), Length(min=1, max=100)]
+        "Sensitive Field", [validators.InputRequired(), validators.Length(min=1, max=100)]
     )
     action = SelectField(
         "Action taken when conditions meet",
-        [InputRequired()],
+        [validators.InputRequired()],
         choices=[
             ("deny_and_alert", "Deny and Alert"),
             ("alert_only", "Alert Only"),
-        ],
+        ]
     )
     occurrence_threshold = IntegerField(
-        "Occurrence Threshold", [InputRequired()]
+        "Occurrence Threshold", [validators.InputRequired()]
     )
     alert_level = SelectField(
-        "Alert Level",
-        [InputRequired()],
+        "Alert Level", [validators.InputRequired()],
         choices=[("High", "High"), ("Medium", "Medium"), ("Low", "Low")],
     )
 
-
 class WhitelistForm(FlaskForm):
     ip_address = StringField(
-        "IP address", [InputRequired(), Length(min=7, max=15)]
+        "IP address", [validators.InputRequired(), validators.Length(min=7, max=15)]
     )
-
 
 class LoginForm(FlaskForm):
-    username = StringField("Username", [InputRequired(), Length(max=32)])
+    username = StringField("Username", [validators.InputRequired(), validators.Length(max=32)])
     password = PasswordField(
-        "Password", [InputRequired(), Length(min=8, max=32)]
+        "Password", [validators.InputRequired(), validators.Length(min=8, max=32)]
     )
-
 
 class CreateUserForm(FlaskForm):
-    username = StringField("Username", [InputRequired(), Length(max=32)])
+    username = StringField("Username", [validators.InputRequired(), validators.Length(max=32)])
     password = PasswordField(
-        "Password", [InputRequired(), Length(min=8, max=32)]
+        "Password", [validators.InputRequired(), validators.Length(min=8, max=32)]
     )
-    permissions = SelectMultipleField("Permissions", [InputRequired()])
-
+    permissions = SelectMultipleField("Permissions", [validators.InputRequired()])
 
 class CreateAdminUserForm(FlaskForm):
-    username = StringField("Username", [InputRequired(), Length(max=32)])
+    username = StringField("Username", [validators.InputRequired(), validators.Length(max=32)])
     password = PasswordField(
-        "Password", [InputRequired(), Length(min=8, max=32)]
+        "Password", [validators.InputRequired(), validators.Length(min=8, max=32)]
     )
 
-
 class ChoiceForm(FlaskForm):
-    model = StringField("Model", validators=[InputRequired()])
-    field = StringField("Field", validators=[InputRequired()])
+    model = StringField("Model", validators=[validators.InputRequired()])
+    field = StringField("Field", validators=[validators.InputRequired()])
