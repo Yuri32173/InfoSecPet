@@ -1,47 +1,17 @@
-import datetime
-import hashlib
 import os
+from secrets import token_urlsafe
+from enum import Enum
 
-from flask import Flask, flash, redirect, render_template, request, url_for
-from flask_login import (
-    LoginManager,
-    current_user,
-    login_required,
-    login_user,
-    logout_user,
-)
+from flask import Flask
+from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
 
-import constants
-import forms
-from blueprints import (
-    alert_blueprint,
-    api_blueprint,
-    api_key_management_blueprint,
-    backup_blueprint,
-    dashboard_blueprint,
-    documentation_blueprint,
-    encryption_blueprint,
-    encryption_key_management_blueprint,
-    onboarding_blueprint,
-    requests_blueprint,
-    sensitive_fields_blueprint,
-    user_management_blueprint,
-    whitelist_blueprint,
-)
 from client_models import client_db
-from helper_functions import is_safe_url
-from server_models import (
-    Alert,
-    BackupLog,
-    Request,
-    ServerPermission,
-    ServerUser,
-    server_db,
-)
+from server_models import ServerPermission, server_db
+from blueprints import *
 
 app = Flask(__name__)
-app.secret_key = os.urandom(16)
+app.secret_key = token_urlsafe(16)
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///client_db.sqlite3"
 app.config["SQLALCHEMY_BINDS"] = {
@@ -61,63 +31,56 @@ app.config.update(
     )
 )
 
-app.register_blueprint(alert_blueprint.alert_blueprint)
-app.register_blueprint(api_blueprint.api_blueprint)
-app.register_blueprint(
-    api_key_management_blueprint.api_key_management_blueprint
-)
-app.register_blueprint(backup_blueprint.backup_blueprint)
-app.register_blueprint(dashboard_blueprint.dashboard_blueprint)
-app.register_blueprint(documentation_blueprint.documentation_blueprint)
-app.register_blueprint(encryption_blueprint.encryption_blueprint)
-app.register_blueprint(
-    encryption_key_management_blueprint.encryption_key_management_blueprint
-)
-app.register_blueprint(onboarding_blueprint.onboarding_blueprint)
-app.register_blueprint(requests_blueprint.requests_blueprint)
-app.register_blueprint(sensitive_fields_blueprint.sensitive_fields_blueprint)
-app.register_blueprint(user_management_blueprint.user_management_blueprint)
-app.register_blueprint(whitelist_blueprint.whitelist_blueprint)
+# Register blueprints
+app.register_blueprint(alert_blueprint)
+app.register_blueprint(api_blueprint)
+app.register_blueprint(api_key_management_blueprint)
+app.register_blueprint(backup_blueprint)
+app.register_blueprint(dashboard_blueprint)
+app.register_blueprint(documentation_blueprint)
+app.register_blueprint(encryption_blueprint)
+app.register_blueprint(encryption_key_management_blueprint)
+app.register_blueprint(onboarding_blueprint)
+app.register_blueprint(requests_blueprint)
+app.register_blueprint(sensitive_fields_blueprint)
+app.register_blueprint(user_management_blueprint)
+app.register_blueprint(whitelist_blueprint)
 
+# CSRF protection
 csrf = CSRFProtect(app)
-csrf.exempt(api_blueprint.api_blueprint)
+csrf.exempt(api_blueprint)
 
-login_manager = LoginManager()
-login_manager.init_app(app)
+# Login Manager
+login_manager = LoginManager(app)
 login_manager.login_view = "index"
 login_manager.login_message_category = "danger"
 
-client_db.init_app(app)
-server_db.init_app(app)
-alert_blueprint.mail.init_app(app)
-
+# Initialize databases and create missing permissions
 with app.app_context():
+    client_db.init_app(app)
     client_db.create_all()
-    client_db.session.commit()
 
+    server_db.init_app(app)
     server_db.create_all(bind="server")
-    server_permission_names = [
-        server_permission.name
-        for server_permission in ServerPermission.query.all()
-    ]
+
+    server_permission_names = [permission.name for permission in ServerPermission.query.all()]
+
+    # Define server permissions as Enum
+    class ValidServerPermissions(Enum):
+        """Valid server permissions"""
+        PERMISSION_1 = "permission_1"
+        PERMISSION_2 = "permission_2"
+        # Add other permissions here
 
     # Create missing server permission(s)
-    for server_permission_name in [
-        valid_server_permission
-        for valid_server_permission in constants.VALID_SERVER_PERMISSION_NAMES
-        if valid_server_permission not in server_permission_names
-    ]:
-        server_db.session.add(ServerPermission(name=server_permission_name))
+    for valid_permission in ValidServerPermissions:
+        if valid_permission.value not in server_permission_names:
+            server_db.session.add(ServerPermission(name=valid_permission.value))
 
     # Remove any invalid server permission(s)
-    for server_permission_name in [
-        server_permission_name
-        for server_permission_name in server_permission_names
-        if server_permission_name not in constants.VALID_SERVER_PERMISSION_NAMES
-    ]:
-        server_db.session.delete(
-            ServerPermission.query.get(server_permission_name)
-        )
+    for server_permission in ServerPermission.query.all():
+        if server_permission.name not in ValidServerPermissions._member_names_:
+            server_db.session.delete(server_permission)
 
     server_db.session.commit()
 
